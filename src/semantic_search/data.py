@@ -73,6 +73,42 @@ def read_table(path: str | Path) -> pd.DataFrame:
     raise ValueError("Supported file types are Parquet, CSV, and JSONL.")
 
 
+def load_records(path: str | Path) -> list[dict[str, Any]]:
+    """Read Phase 1 ``id/text/metadata`` JSONL records in file order and validate them.
+
+    Repeated IDs are allowed because Phase 1 reports but keeps them, so the index
+    aligns records by row position and checks the ID at every row.
+    """
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Records file not found: {path}. Create it with: python -m src.semantic_search.data ..."
+        )
+    records: list[dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as file:
+        for line_number, line in enumerate(file, start=1):
+            if not line.strip():
+                continue
+            where = f"{path}:{line_number}"
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{where}: invalid JSON ({exc.msg}).") from exc
+            if not isinstance(record, dict):
+                raise ValueError(f"{where}: expected a JSON object.")
+            record_id, text, metadata = record.get("id"), record.get("text"), record.get("metadata", {})
+            if not isinstance(record_id, str) or not record_id:
+                raise ValueError(f"{where}: 'id' must be a non-empty string.")
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError(f"{where}: 'text' must be a non-empty string.")
+            if not isinstance(metadata, dict):
+                raise ValueError(f"{where}: 'metadata' must be a JSON object.")
+            records.append({"id": record_id, "text": text, "metadata": metadata})
+    if not records:
+        raise ValueError(f"Records file is empty: {path}.")
+    return records
+
+
 def make_records(
     frame: pd.DataFrame,
     text_columns: Sequence[str],
