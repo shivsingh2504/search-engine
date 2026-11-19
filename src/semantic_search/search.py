@@ -19,6 +19,41 @@ class ExactSearch:
         "The number of embeddings does not match the number of records."
       )
     self.model = SentenceTransformer(MODEL_NAME)
-    
+  
+  def search(self,query,top_k=5):
+    query_vector = self.model.encode(
+      query,
+      normalize_embeddings=True,
+      convert_to_numpy=True,
+    ).astype(np.float32)
+    scores = self.embeddings @ query_vector
+    top_k = min(top_k, len(self.records))
+    best_indices = np.argsort(scores)[::-1][:top_k]
+    return [
+      {
+        "score": float(scores[index]),
+        **self.records[index],
+      }
+      for index in best_indices
+    ]
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("query", help="Natural-language product search query")
+    parser.add_argument("--top-k", type=int, default=5)
+    args = parser.parse_args()
+
+    searcher = ExactSearch()
+    results = searcher.search(args.query, args.top_k)
+
+    for rank, result in enumerate(results, start=1):
+        print(f"\n{rank}. Score: {result['score']:.4f}")
+        print(f"ID: {result['id']}")
+        print(f"Text: {result['text'][:500]}")
+        print(f"Metadata: {result['metadata']}")
+
+
+if __name__ == "__main__":
+    main()
 
     
