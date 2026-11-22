@@ -24,7 +24,7 @@ def main():
     convert_to_numpy = True,
   ).astype(np.float32)
   OUTPUT_DIR.mkdir(parents=True,exist_ok=True)
-  np.save(OUTPUT_DIR / "embeddings.npy", embeddings)
+  np.save(OUTPUT_DIR / "product_embeddings.npy", embeddings)
   with (OUTPUT_DIR / "product_records.jsonl").open(
         "w", encoding="utf-8", newline="\n"
     ) as file:
