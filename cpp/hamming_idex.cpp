@@ -20,7 +20,7 @@ std::uint16_t hamming_distance(
     );
 }
 
-}  // namespace
+}  
 
 HammingIndex::HammingIndex(const std::uint64_t* words, std::size_t count)
     : count_(count) {
@@ -51,7 +51,7 @@ SearchResult HammingIndex::search(
 
     k = std::min(k, count_);
 
-    // Keep the k best (smallest distance, then lowest row index).
+    
     using Entry = std::pair<std::uint16_t, std::int64_t>;
     std::vector<Entry> storage;
     storage.reserve(k);
@@ -78,7 +78,7 @@ SearchResult HammingIndex::search(
     result.indices.resize(heap.size());
     result.distances.resize(heap.size());
 
-    // Heap pops worst-to-best; fill backward for ascending result order.
+    
     for (std::size_t i = heap.size(); i-- > 0;) {
         result.distances[i] = heap.top().first;
         result.indices[i] = heap.top().second;
@@ -88,4 +88,4 @@ SearchResult HammingIndex::search(
     return result;
 }
 
-}  // namespace lsh
+}  
