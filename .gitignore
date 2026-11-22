@@ -5,3 +5,7 @@ __pycache__/
 .env
 data/raw/
 data/processed/
+build/
+*.pyd
+*.so
+*.egg-info/

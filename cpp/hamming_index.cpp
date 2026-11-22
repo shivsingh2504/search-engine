@@ -1,9 +1,12 @@
 #include "hamming_index.hpp"
 
-#include <bits/stdc++.h>
-#include <stdexcept>
+#include <algorithm>
 #include <bit>
+#include <limits>
+#include <queue>
+#include <stdexcept>
 #include <utility>
+#include <vector>
 
 namespace lsh {
 namespace {
@@ -20,7 +23,7 @@ std::uint16_t hamming_distance(
     );
 }
 
-}  
+}  // namespace
 
 HammingIndex::HammingIndex(const std::uint64_t* words, std::size_t count)
     : count_(count) {
@@ -33,6 +36,9 @@ HammingIndex::HammingIndex(const std::uint64_t* words, std::size_t count)
     if (count > static_cast<std::size_t>(
                     std::numeric_limits<std::int64_t>::max())) {
         throw std::length_error("Too many signatures.");
+    }
+    if (count > words_.max_size() / kWordsPerSignature) {
+        throw std::length_error("Signature array is too large.");
     }
 
     words_.assign(words, words + count * kWordsPerSignature);
@@ -51,17 +57,14 @@ SearchResult HammingIndex::search(
 
     k = std::min(k, count_);
 
-    
     using Entry = std::pair<std::uint16_t, std::int64_t>;
     std::vector<Entry> storage;
     storage.reserve(k);
     std::priority_queue<Entry> heap(std::less<Entry>{}, std::move(storage));
 
     for (std::size_t row = 0; row < count_; ++row) {
-        const auto* signature =
-            words_.data() + row * kWordsPerSignature;
-
-        Entry candidate{
+        const auto* signature = words_.data() + row * kWordsPerSignature;
+        const Entry candidate{
             hamming_distance(query, signature),
             static_cast<std::int64_t>(row)
         };
@@ -78,7 +81,7 @@ SearchResult HammingIndex::search(
     result.indices.resize(heap.size());
     result.distances.resize(heap.size());
 
-    
+    // The heap pops worst-first; fill from the end for ascending order.
     for (std::size_t i = heap.size(); i-- > 0;) {
         result.distances[i] = heap.top().first;
         result.indices[i] = heap.top().second;
@@ -88,4 +91,4 @@ SearchResult HammingIndex::search(
     return result;
 }
 
-}  
+}  // namespace lsh
