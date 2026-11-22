@@ -15,3 +15,9 @@ BIT_WEIGHTS = np.left_shift(
     np.uint64(1),
     np.arange(BITS_PER_WORD, dtype=np.uint64),
 )
+
+def make_hyperplane(input_dim,seed=DEFAULT_SEED):
+  if input_dim <= 0:
+    raise ValueError("input_dimension must be positive.")
+  rng = np.random.default_rng(seed)
+  return rng.standard_normal(NUM_BITS,input_dim).astype(np.float32)
