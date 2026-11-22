@@ -21,7 +21,7 @@ def make_hyperplane(input_dim,seed=DEFAULT_SEED):
   if input_dim <= 0:
     raise ValueError("input_dimension must be positive.")
   rng = np.random.default_rng(seed)
-  return rng.standard_normal(NUM_BITS,input_dim).astype(np.float32)
+  return rng.standard_normal((NUM_BITS,input_dim)).astype(np.float32)
 
 def pack_sig(embeddings,hyperplanes,batch_size=8192):
   embeddings = np.asarray(embeddings,dtype=np.float32)
@@ -57,3 +57,53 @@ def pack_sig(embeddings,hyperplanes,batch_size=8192):
       dtype = np.uint64
     )
   return np.ascontiguousarray(sig)
+
+def hash_query(vector, hyperplanes):
+    vector = np.asarray(vector, dtype=np.float32)
+
+    if vector.ndim != 1:
+        raise ValueError(f"query vector must be one-dimensional; got {vector.shape}.")
+
+    signatures = pack_sig(
+        vector.reshape(1, -1),
+        hyperplanes,
+        batch_size=1,
+    )
+    return signatures[0]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--batch-size", type=int, default=8192)
+    args = parser.parse_args()
+
+    if not EMBEDDINGS_FILE.is_file():
+        raise FileNotFoundError(
+            f"Embeddings not found at {EMBEDDINGS_FILE}. "
+            "Run the embedding step first."
+        )
+
+    embeddings = np.load(EMBEDDINGS_FILE)
+    hyperplanes = make_hyperplane(embeddings.shape[1], seed=args.seed)
+    signatures = pack_sig(
+        embeddings,
+        hyperplanes,
+        batch_size=args.batch_size,
+    )
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    np.savez(
+        SIGNATURES_FILE,
+        signatures=signatures,
+        hyperplanes=hyperplanes,
+        seed=np.int64(args.seed),
+    )
+
+    print(f"Products hashed: {len(signatures):,}")
+    print(f"Signature shape: {signatures.shape}")
+    print(f"Signature dtype: {signatures.dtype}")
+    print(f"Saved signatures and hyperplanes to: {SIGNATURES_FILE}")
+
+if __name__ == "__main__":
+    main()
