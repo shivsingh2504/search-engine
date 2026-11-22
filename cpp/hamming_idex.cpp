@@ -19,5 +19,15 @@ namespace lsh{
       );
     }
   }
-
+  HammingIndex::HammingIndex(const std::uint64_t* words,std::size_t count):count_(count){
+    if(words == nullptr){
+      throw std::invalid_argument("Signature data cannot be null.");
+    }
+    if(count > static_cast<std::size_t>(
+      std::numeric_limits<std::int64_t>::max())){
+        throw std::length_error("Too many signatures.");
+    }
+    words_.assign(words,words+count * kWordsPerSig);
+  }
+  
 }
