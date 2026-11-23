@@ -33,5 +33,25 @@ def encode(model,query):
 def percentile90(values):
   return float(np.percentile(values,90))
 
+def recall_k(reference,found,k=TOP_K):
+  reference_ids = {row["id"] for row in reference[:k]}
+  found_ids = {row["id"] for row in found[:k]}
+  if not reference_ids:
+    return 1.0
+  return len(reference_ids & found_ids) / len(reference_ids)
+
+def measure(function,warmup,repeats):
+  for _ in range(warmup):
+    function()
+  samples = []
+  for _ in range(repeats):
+    start = time.perf_counter()
+    function()
+    samples.append(time.perf_counter() - start)
+  return samples
+
+def ms(seconds):
+  return seconds * 1000
+
 
   
