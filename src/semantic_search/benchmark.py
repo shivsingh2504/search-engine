@@ -23,3 +23,15 @@ QUERIES = (
 )
 DEFAULT_CANDIDATES = (25, 50, 100, 250, 500)
 
+def encode(model,query):
+  return model.encode(
+    query,
+    normalize_embeddings=True,
+    convert_to_numpy=True,
+  ).astype(np.float32)
+  
+def percentile90(values):
+  return float(np.percentile(values,90))
+
+
+  
