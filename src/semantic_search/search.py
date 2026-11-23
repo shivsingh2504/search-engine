@@ -26,6 +26,16 @@ class ExactSearch:
       normalize_embeddings=True,
       convert_to_numpy=True,
     ).astype(np.float32)
+    return self.search_vector(query_vector, top_k=top_k)
+
+  def search_vector(self, query_vector, top_k=5):
+    """Search with an already embedded, unit-normalized query vector."""
+    query_vector = np.asarray(query_vector, dtype=np.float32)
+    if query_vector.ndim != 1 or query_vector.shape[0] != self.embeddings.shape[1]:
+      raise ValueError(
+        f"query_vector must have shape ({self.embeddings.shape[1]},); "
+        f"got {query_vector.shape}."
+      )
     scores = self.embeddings @ query_vector
     top_k = min(top_k, len(self.records))
     best_indices = np.argsort(scores)[::-1][:top_k]
@@ -55,5 +65,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
